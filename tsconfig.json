@@ -1,0 +1,22 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",                       /* Specify ECMAScript target version */
+    "module": "commonjs",                     /* Specify module code generation */
+    "rootDir": "./src",                       /* Specify the root directory of input files */
+    "outDir": "./dist",                       /* Redirect output structure to the directory */
+    "esModuleInterop": true,                  /* Enables emit interoperability between CommonJS and ES Modules */
+    "forceConsistentCasingInFileNames": true, /* Disallow inconsistently-cased references to the same file. */
+    "strict": true,                           /* Enable all strict type-checking options */
+    "skipLibCheck": true,                     /* Skip type checking of declaration files */
+    "resolveJsonModule": true,                /* Include modules imported with .json extension */
+    "experimentalDecorators": true,           /* Enables experimental support for ES7 decorators. (Needed for TypeORM/Sequelize-TS) */
+    "emitDecoratorMetadata": true,            /* Enables experimental support for emitting type metadata for decorators. (Needed for TypeORM/Sequelize-TS) */
+    "baseUrl": ".",                           /* Base directory to resolve non-absolute module names. */
+    "paths": {                                /* A series of entries which re-map imports to lookup locations relative to the 'baseUrl'. */
+      "@/*": ["src/*"]
+    },
+    "typeRoots": ["./node_modules/@types", "./src/interfaces"] /* Specify type definition directories */
+  },
+  "include": ["src/**/*", "src/config"],                    /* Specifies an array of filenames or patterns to include in the program */
+  "exclude": ["node_modules", "dist", "tests"] /* Specifies an array of filenames or patterns that should be skipped when resolving include */
+}

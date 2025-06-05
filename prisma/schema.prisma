@@ -1,0 +1,109 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum UserRole {
+  PATIENT
+  HOSPITAL_ADMIN
+  DOCTOR
+  NURSE
+  STAFF // Generic staff role for organizations
+  PHARMA_ADMIN
+  LAB_ADMIN
+  SYSTEM_ADMIN
+}
+
+model User {
+  id                String     @id @default(uuid())
+  email             String     @unique 
+  passwordHash      String     @map("password_hash")
+  fullName          String?    @map("full_name")
+  roles             UserRole[] @default([PATIENT])
+  mobileCode        String?     
+  mobile            Int?  
+  phoneCode         String?
+  phone             Int?
+  address           String?
+  pinCode           String?
+  isActive          Boolean    @default(true) @map("is_active")
+  isEmailVerified   Boolean    @default(false) @map("is_email_verified")
+  
+  employeeId        String?    @map("employee_id") // Staff specific
+  department        String?    // Staff specific (e.g., Cardiology, Pediatrics, FrontDesk)
+
+  createdAt         DateTime   @default(now()) @map("created_at")
+  updatedAt         DateTime   @updatedAt @map("updated_at")
+  
+  // For a user who is an admin of an organization (1-to-1 from User's perspective)
+  organization      Organization? @relation("OrganizationAdmin", fields: [organizationId], references: [id])
+  organizationId    String?       @unique @map("organization_id") 
+
+  // For a user who is a staff member of an organization (Many-to-1 from User's perspective)
+  staffOrganization Organization? @relation("OrganizationStaff", fields: [staffOrganizationId], references: [id]) 
+  staffOrganizationId String?    @map("staff_organization_id") // Foreign key to link staff to an organization
+
+  passwordResetTokens PasswordResetToken[] 
+
+  @@map("users")
+  @@index([staffOrganizationId]) // Index for querying staff by organization
+}
+
+enum OrganizationType {
+  HOSPITAL
+  PHARMACY 
+  LAB
+}
+
+enum OrganizationStatus {
+  PENDING_VERIFICATION
+  ACTIVE
+  REJECTED
+  SUSPENDED
+}
+
+model Organization {
+  id                      String             @id @default(uuid())
+  name                    String
+  type                    OrganizationType
+  licenseNumber           String?            @map("license_number")
+  licenseDocumentS3Path   String?            @map("license_document_s3_path") 
+  address                 String?            
+  contactPersonName       String             @map("contact_person_name")
+  contactPersonEmail      String             @map("contact_person_email") @unique 
+  contactPersonMobile     String?            @map("contact_person_mobile")
+  status                  OrganizationStatus @default(PENDING_VERIFICATION)
+  
+  // The user who is the primary admin for this organization
+  adminUser             User?              @relation("OrganizationAdmin") 
+  
+  // Staff members belonging to this organization
+  staffMembers          User[]             @relation("OrganizationStaff") 
+
+  rejectionReason         String?            @map("rejection_reason")
+  approvedBy            String?            @map("approved_by_user_id") 
+  approvedAt            DateTime?          @map("approved_at")
+  
+  createdAt               DateTime           @default(now()) @map("created_at")
+  updatedAt               DateTime           @updatedAt @map("updated_at")
+
+  @@map("organizations")
+  @@index([contactPersonEmail])
+}
+
+model PasswordResetToken {
+  id        String   @id @default(uuid())
+  tokenHash String   @unique @map("token_hash") // Store hashed token
+  userId    String   @map("user_id")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  usedAt    DateTime? @map("used_at") // Timestamp when token was used
+
+  @@map("password_reset_tokens")
+  @@index([userId])
+}
